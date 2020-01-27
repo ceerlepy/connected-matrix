@@ -1,21 +1,22 @@
 import React from "react";
-import PropTypes from "prop-types";
 import StyledButton from "../../styleComponents/button";
-import StyledDiv from "../../styleComponents/div";
 
-const gridButton = ({
-  value,
-  connectedItemSize,
-  onClick,
-  onHover,
-  onHoverLeft,
-  isHovered,
-  isClicked,
-  rowIndex,
-  colIndex
-}) => {
-  let color = value === 1 ? "red" : "white";
-  color = value === 1 && isHovered ? "yellow" : color;
+const gridButton = props => {
+  const {
+    value,
+    connectedItemSize,
+    onClick,
+    onHover,
+    onHoverLeft,
+    isHovered,
+    isClicked,
+    rowIndex,
+    colIndex,
+    filledColor,
+    hoverColor
+  } = props;
+  let color = value === 1 ? filledColor : "white";
+  color = value === 1 && isHovered ? hoverColor : color;
 
   const onClickButton = () => {
     if (value === 1) {
@@ -35,18 +36,20 @@ const gridButton = ({
     }
   };
 
+  let showButtonText =
+    isClicked && !isHovered && value === 1 && connectedItemSize > 0;
+
   return (
     <StyledButton
-      style={{ backgroundColor: color }}
+      style={{
+        backgroundColor: color,
+        color: showButtonText ? "white" : color
+      }}
       onClick={onClickButton}
       onMouseOver={onHoverButton}
       onMouseLeave={onHoverLeftButton}
     >
-      {isClicked && value === 1 && connectedItemSize > 0 && (
-        <StyledDiv fontWeight={"bold"} fontSize={"1.5em"}>
-          {connectedItemSize}
-        </StyledDiv>
-      )}
+      {connectedItemSize}
     </StyledButton>
   );
 };

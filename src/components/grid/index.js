@@ -8,23 +8,46 @@ export default class Grid extends PureComponent {
     hovered: false,
     targetRowIndex: 0,
     targetColIndex: 0,
-    resolvedMap: null
+    resolvedMap: null,
+    matrixSize: 0,
+    filledColor: "red",
+    hoverColor: "yellow",
+    grid: []
   };
 
-  constructor(props) {
-    super(props);
-    this.matrix = new Matrix(6, 6);
-  }
+  static getDerivedStateFromProps = (nextProps, prevState) => {
+    const {
+      matrixSize: p_matrixSize,
+      filledColor: p_filledColor,
+      hoverColor: p_hoverColor
+    } = nextProps;
+    const {
+      matrixSize: s_matrixSize,
+      filledColor: s_filledColor,
+      hoverColor: s_hoverColor
+    } = prevState;
 
-  componentDidMount = async () => {
-    let resolvedMap = this.matrix.resolveMatrix();
-    this.setState(prevState => ({
+    if (
+      p_matrixSize === s_matrixSize &&
+      p_filledColor === s_filledColor &&
+      p_hoverColor === s_hoverColor
+    ) {
+      return null;
+    }
+
+    let matrix = new Matrix(p_matrixSize, p_matrixSize);
+    let resolvedMap = matrix.resolveMatrix();
+    return {
       clicked: prevState.clicked,
       hovered: prevState.hovered,
       targetRowIndex: prevState.targetRowIndex,
       targetColIndex: prevState.targetColIndex,
-      resolvedMap: resolvedMap
-    }));
+      resolvedMap,
+      matrixSize: p_matrixSize,
+      filledColor: p_filledColor,
+      hoverColor: p_hoverColor,
+      grid: matrix.getGrid()
+    };
   };
 
   onClickButton = (targetRowIndex, targetColIndex) => {
@@ -33,7 +56,11 @@ export default class Grid extends PureComponent {
       hovered: false,
       targetRowIndex: targetRowIndex,
       targetColIndex: targetColIndex,
-      resolvedMap: prevState.resolvedMap
+      resolvedMap: prevState.resolvedMap,
+      matrixSize: prevState.matrixSize,
+      filledColor: prevState.filledColor,
+      hoverColor: prevState.hoverColor,
+      grid: prevState.grid
     }));
   };
 
@@ -43,7 +70,11 @@ export default class Grid extends PureComponent {
       hovered: true,
       targetRowIndex: targetRowIndex,
       targetColIndex: targetColIndex,
-      resolvedMap: prevState.resolvedMap
+      resolvedMap: prevState.resolvedMap,
+      matrixSize: prevState.matrixSize,
+      filledColor: prevState.filledColor,
+      hoverColor: prevState.hoverColor,
+      grid: prevState.grid
     }));
   };
 
@@ -53,7 +84,11 @@ export default class Grid extends PureComponent {
       hovered: false,
       targetRowIndex: prevState.targetRowIndex,
       targetColIndex: prevState.targetColIndex,
-      resolvedMap: prevState.resolvedMap
+      resolvedMap: prevState.resolvedMap,
+      matrixSize: prevState.matrixSize,
+      filledColor: prevState.filledColor,
+      hoverColor: prevState.hoverColor,
+      grid: prevState.grid
     }));
   };
 
@@ -63,65 +98,72 @@ export default class Grid extends PureComponent {
       targetRowIndex,
       targetColIndex,
       clicked,
-      hovered
+      hovered,
+      filledColor,
+      hoverColor,
+      grid
     } = this.state;
 
     let connectedArr = [];
-    if (hovered) {
+    if (hovered && resolvedMap) {
       connectedArr = resolvedMap.get(`${targetRowIndex},${targetColIndex}`);
     }
 
     let connectedItemSize = 0;
-    if (clicked) {
+    if (clicked && resolvedMap) {
       let arr = resolvedMap.get(`${targetRowIndex},${targetColIndex}`);
       if (arr) {
         connectedItemSize = arr.length;
       }
     }
 
-    let grid = this.matrix.getGrid();
-    const comp = grid.map((gridRow, rowIndex) => {
-      const gridRowComp = gridRow.map((item, colIndex) => {
-        let isHovered = false;
-        if (hovered) {
-          if (connectedArr) {
-            isHovered = connectedArr.find(item => {
-              return item.x === rowIndex && item.y === colIndex;
-            });
+    let comp = null;
+    if (grid !== null) {
+      comp = grid.map((gridRow, rowIndex) => {
+        const gridRowComp = gridRow.map((item, colIndex) => {
+          let isHovered = false;
+          if (hovered) {
+            if (connectedArr) {
+              isHovered = connectedArr.find(item => {
+                return item.x === rowIndex && item.y === colIndex;
+              });
+            }
           }
-        }
 
-        let isClicked = false;
-        if (
-          !hovered &&
-          rowIndex === targetRowIndex &&
-          colIndex === targetColIndex
-        ) {
-          isClicked = true;
-        }
+          let isClicked = false;
+          if (
+            !hovered &&
+            rowIndex === targetRowIndex &&
+            colIndex === targetColIndex
+          ) {
+            isClicked = true;
+          }
+
+          return (
+            <GridButton
+              key={colIndex}
+              value={item.val}
+              connectedItemSize={connectedItemSize}
+              onClick={this.onClickButton}
+              onHover={this.onHoverButton}
+              onHoverLeft={this.onHoverLeft}
+              isHovered={isHovered}
+              isClicked={isClicked}
+              rowIndex={rowIndex}
+              colIndex={colIndex}
+              filledColor={filledColor}
+              hoverColor={hoverColor}
+            />
+          );
+        });
 
         return (
-          <GridButton
-            key={colIndex}
-            value={item.val}
-            connectedItemSize={connectedItemSize}
-            onClick={this.onClickButton}
-            onHover={this.onHoverButton}
-            onHoverLeft={this.onHoverLeft}
-            isHovered={isHovered}
-            isClicked={isClicked}
-            rowIndex={rowIndex}
-            colIndex={colIndex}
-          />
+          <div style={{ flex: 1 }} key={rowIndex}>
+            {gridRowComp}
+          </div>
         );
       });
-
-      return (
-        <div style={{ flex: 1 }} key={rowIndex}>
-          {gridRowComp}
-        </div>
-      );
-    });
+    }
 
     return <React.Fragment>{comp}</React.Fragment>;
   }
