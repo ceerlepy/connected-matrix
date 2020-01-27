@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import "./index.css";
 
 const Slider = ({ onChangeSlider }) => {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(1);
 
   const onChange = event => {
     event.preventDefault();
@@ -10,17 +11,18 @@ const Slider = ({ onChangeSlider }) => {
   };
 
   return (
-    <div>
+    <div className="slidecontainer">
       <input
-        id="slider"
         type="range"
-        min="0"
+        min="1"
         max="23"
-        step="1"
+        value={count}
+        className="slider"
+        id="myRange"
+        style={{ width: 500, marginRight: 20 }}
         onChange={event => onChange(event)}
-        style={{ width: 200 }}
-      />
-      {count}
+      ></input>
+      <div className="flexCls">{count}</div>
     </div>
   );
 };
